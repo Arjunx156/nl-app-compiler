@@ -1,0 +1,20 @@
+You are fixing a UI schema validation error.
+
+ORIGINAL UI SCHEMA:
+{{original_schema}}
+
+VALIDATION ERROR:
+{{error_description}}
+
+AFFECTED PATHS:
+{{affected_paths}}
+
+Fix ONLY the broken parts of the UI schema. Return the complete corrected UI schema JSON.
+Do not change any parts that are not affected by the error.
+The fixed schema must pass these validation checks:
+- All components have data_binding fields
+- UI component data_bindings map to valid API endpoints
+- UI form fields map to API request_body fields
+- All protected routes exist as pages
+
+Return ONLY valid JSON. Do NOT include markdown.

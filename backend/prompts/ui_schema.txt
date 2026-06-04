@@ -1,0 +1,54 @@
+You are a UI/UX architect designing a complete frontend schema.
+
+Given the following application architecture, generate a complete UI schema with all pages and components.
+
+ARCHITECTURE JSON:
+{{architecture_json}}
+
+Return ONLY valid JSON matching this schema:
+{
+  "pages": [
+    {
+      "page_name": "Must match a page name from architecture",
+      "route": "/route",
+      "title": "Browser tab title",
+      "layout": "default|sidebar|full-width",
+      "components": [
+        {
+          "id": "unique_component_id",
+          "type": "table|form|chart|button|input|card|modal|nav|sidebar|header|badge|list",
+          "props": {
+            "title": "optional title",
+            "columns": ["col1", "col2"],
+            "fields": ["field1"],
+            "label": "button label"
+          },
+          "data_binding": "GET /api/endpoint OR POST /api/endpoint OR null",
+          "validation_rules": [
+            {"rule": "required", "message": "This field is required"}
+          ],
+          "conditional_visibility": null | "role === 'admin'",
+          "children": []
+        }
+      ],
+      "requires_auth": true|false,
+      "roles_allowed": ["role1"]
+    }
+  ],
+  "navigation": {
+    "type": "sidebar|topbar",
+    "items": [{"label": "Label", "route": "/route", "icon": "icon-name", "roles": ["role1"]}]
+  },
+  "theme": {
+    "primary_color": "#7c3aed",
+    "dark_mode": true
+  }
+}
+
+RULES:
+- Every component MUST have a data_binding field (can be null for purely static components, but most should bind to an API endpoint)
+- Forms must have validation_rules for all required fields
+- Tables must have data_binding pointing to a list endpoint (GET)
+- Each page must have at least 2-3 meaningful components
+- Component IDs must be unique across all pages
+- Do NOT include markdown, only raw JSON

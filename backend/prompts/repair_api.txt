@@ -1,0 +1,22 @@
+You are fixing an API schema validation error.
+
+ORIGINAL API SCHEMA:
+{{original_schema}}
+
+VALIDATION ERROR:
+{{error_description}}
+
+AFFECTED PATHS:
+{{affected_paths}}
+
+VALID DB ENTITIES (use these exact names for db_entity_ref):
+{{valid_entities}}
+
+Fix ONLY the broken parts of the API schema. Return the complete corrected API schema JSON.
+Do not change any parts that are not affected by the error.
+The fixed schema must pass these validation checks:
+- Every endpoint has a db_entity_ref that matches a real entity in the DB schema
+- Every endpoint's request/response fields exist as columns in the referenced table
+- All roles in endpoint roles_allowed exist in the Auth schema
+
+Return ONLY valid JSON. Do NOT include markdown.

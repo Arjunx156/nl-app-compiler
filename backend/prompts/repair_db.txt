@@ -1,0 +1,20 @@
+You are fixing a database schema validation error.
+
+ORIGINAL DB SCHEMA:
+{{original_schema}}
+
+VALIDATION ERROR:
+{{error_description}}
+
+AFFECTED PATHS:
+{{affected_paths}}
+
+Fix ONLY the broken parts of the DB schema. Return the complete corrected DB schema JSON.
+Do not change any parts that are not affected by the error.
+The fixed schema must pass these validation checks:
+- Every table has id (PK), created_at, updated_at columns
+- All FK column names end in _id
+- FK references point to existing tables and columns
+- No required fields are nullable
+
+Return ONLY valid JSON. Do NOT include markdown.

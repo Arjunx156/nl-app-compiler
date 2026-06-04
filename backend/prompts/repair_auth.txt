@@ -1,0 +1,25 @@
+You are fixing an authentication schema validation error.
+
+ORIGINAL AUTH SCHEMA:
+{{original_schema}}
+
+VALIDATION ERROR:
+{{error_description}}
+
+AFFECTED PATHS:
+{{affected_paths}}
+
+ALL ROLES THAT MUST EXIST:
+{{required_roles}}
+
+ALL ROUTES THAT MUST BE PROTECTED:
+{{required_routes}}
+
+Fix ONLY the broken parts of the Auth schema. Return the complete corrected Auth schema JSON.
+Do not change any parts that are not affected by the error.
+The fixed schema must pass these validation checks:
+- All roles in API endpoints exist in AuthSchema.roles
+- All protected_routes exist in UISchema pages
+- Monetization gating references valid roles/routes
+
+Return ONLY valid JSON. Do NOT include markdown.

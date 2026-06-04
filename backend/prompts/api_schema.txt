@@ -1,0 +1,55 @@
+You are an API architect designing a complete REST API schema.
+
+Given the following application architecture, generate a complete API schema with all endpoints.
+
+ARCHITECTURE JSON:
+{{architecture_json}}
+
+Return ONLY valid JSON matching this schema:
+{
+  "endpoints": [
+    {
+      "id": "unique_endpoint_id",
+      "path": "/api/resource/{id}",
+      "method": "GET|POST|PUT|PATCH|DELETE",
+      "summary": "Short description",
+      "description": "Detailed description",
+      "request_body": null | {
+        "content_type": "application/json",
+        "fields": [
+          {
+            "name": "field_name",
+            "type": "string|integer|boolean|array|object|uuid|datetime",
+            "required": true|false,
+            "validation": "min:1|max:255|email",
+            "description": "field description"
+          }
+        ],
+        "example": {"field": "value"}
+      },
+      "response": {
+        "status_code": 200,
+        "content_type": "application/json",
+        "fields": [...],
+        "is_list": true|false,
+        "example": {}
+      },
+      "auth_required": true|false,
+      "roles_allowed": ["role1", "role2"],
+      "db_entity_ref": "MUST be an entity name from architecture db_entities",
+      "tags": ["tag1"]
+    }
+  ],
+  "base_url": "/api",
+  "version": "v1",
+  "auth_header": "Authorization: Bearer <token>"
+}
+
+CRITICAL RULES:
+- EVERY endpoint MUST have a db_entity_ref that matches exactly a db_entity name from the architecture
+- Every db_entity must have at least CRUD endpoints (list, get, create, update, delete)
+- Always include auth endpoints: POST /api/auth/login, POST /api/auth/register, POST /api/auth/logout
+- POST/PUT/PATCH endpoints MUST have request_body
+- GET endpoints should have request_body: null
+- Endpoint IDs must be unique (e.g., "contacts_list", "contacts_create")
+- Do NOT include markdown, only raw JSON

@@ -1,0 +1,54 @@
+You are a security architect designing a complete authentication and authorization schema.
+
+Given the following application architecture, generate a complete auth and permissions schema.
+
+ARCHITECTURE JSON:
+{{architecture_json}}
+
+Return ONLY valid JSON matching this schema:
+{
+  "strategy": "jwt",
+  "roles": ["role1", "role2"],
+  "permission_matrix": {
+    "roles": [
+      {
+        "role": "admin",
+        "permissions": [
+          {
+            "resource": "users",
+            "actions": ["create", "read", "update", "delete", "list"]
+          }
+        ],
+        "inherits_from": null
+      }
+    ]
+  },
+  "protected_routes": [
+    {
+      "route": "/dashboard",
+      "roles_allowed": ["admin", "user"],
+      "redirect_to": "/login"
+    }
+  ],
+  "token_config": {
+    "algorithm": "HS256",
+    "access_token_expiry_minutes": 60,
+    "refresh_token_expiry_days": 30,
+    "issuer": "nl-app-compiler"
+  },
+  "oauth_providers": [],
+  "password_policy": {
+    "min_length": 8,
+    "require_uppercase": true,
+    "require_number": true,
+    "require_special": false
+  }
+}
+
+CRITICAL RULES:
+- EVERY role mentioned anywhere in the architecture MUST appear in the "roles" array
+- EVERY role MUST have a corresponding entry in permission_matrix.roles
+- Admin roles should have full CRUD on all resources
+- EVERY page that has requires_auth=true MUST appear in protected_routes
+- resources in permissions should match db_entity names
+- Do NOT include markdown, only raw JSON

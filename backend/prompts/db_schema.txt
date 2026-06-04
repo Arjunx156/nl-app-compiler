@@ -1,0 +1,77 @@
+You are a database architect designing a complete relational database schema.
+
+Given the following application architecture, generate a complete database schema.
+
+ARCHITECTURE JSON:
+{{architecture_json}}
+
+Return ONLY valid JSON matching this schema:
+{
+  "tables": [
+    {
+      "name": "table_name_snake_case",
+      "description": "What this table stores",
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "nullable": false,
+          "default": "gen_random_uuid()",
+          "is_pk": true,
+          "is_fk": false,
+          "references": null,
+          "unique": false,
+          "index": false,
+          "description": "Primary key"
+        },
+        {
+          "name": "foreign_key_id",
+          "type": "UUID",
+          "nullable": false,
+          "default": null,
+          "is_pk": false,
+          "is_fk": true,
+          "references": {
+            "table": "other_table",
+            "column": "id",
+            "on_delete": "CASCADE"
+          },
+          "unique": false,
+          "index": true,
+          "description": "FK to other_table"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "nullable": false,
+          "default": "CURRENT_TIMESTAMP",
+          "is_pk": false,
+          "is_fk": false,
+          "references": null,
+          "unique": false,
+          "index": false,
+          "description": "Creation timestamp"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_table_column",
+          "columns": ["column1"],
+          "unique": false
+        }
+      ],
+      "primary_key": "id"
+    }
+  ],
+  "db_type": "sqlite",
+  "version": "1.0.0"
+}
+
+CRITICAL RULES:
+- EVERY table MUST have these columns: id (UUID, PK), created_at (TIMESTAMP), updated_at (TIMESTAMP)
+- Every db_entity from architecture MUST become a table (use snake_case)
+- ALL foreign key column names MUST end in _id
+- ALL foreign key columns MUST have is_fk=true and a valid references object
+- FK references must point to tables that actually exist in this schema
+- Add appropriate indexes on FK columns and frequently queried fields
+- Do NOT include markdown, only raw JSON
