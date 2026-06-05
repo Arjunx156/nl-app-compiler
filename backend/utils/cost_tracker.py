@@ -39,9 +39,10 @@ class StageStats:
 class CostTracker:
     """Accumulates LLM usage statistics per generation."""
 
-    # Gemini pricing per 1K tokens (approximate, June 2024)
+    # Gemini pricing per 1K tokens (approximate)
     PRICING: Dict[str, Dict[str, float]] = {
         "gemini-2.0-flash": {"input": 0.000075, "output": 0.0003},
+        "gemini-2.5-flash": {"input": 0.000075, "output": 0.0003},
         "gemini-1.5-pro": {"input": 0.00125, "output": 0.005},
         "gemini-1.5-flash": {"input": 0.000075, "output": 0.0003},
     }

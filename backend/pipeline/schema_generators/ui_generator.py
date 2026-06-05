@@ -31,7 +31,7 @@ class UISchemaGenerator:
         raw, usage = await self._client.generate_json(
             prompt=prompt,
             stage_name="ui_generator",
-            model=GeminiClient.POWERFUL,
+            model=GeminiClient.FAST,
             temperature=0.2,
             max_tokens=8192,
         )

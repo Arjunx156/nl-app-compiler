@@ -39,9 +39,7 @@ class SystemArchitect:
         raw, usage = await self._client.generate_json(
             prompt=prompt,
             stage_name="system_architect",
-            model=GeminiClient.POWERFUL,
-            temperature=0.2,
-            max_tokens=8192,
+            model=GeminiClient.FAST,
         )
         self._tracker.track(usage)
         self._log.info("architecture_generated", tokens=usage.total_tokens)
@@ -81,9 +79,7 @@ class SystemArchitect:
             raw2, usage2 = await self._client.generate_json(
                 prompt=retry_prompt,
                 stage_name="system_architect_retry",
-                model=GeminiClient.POWERFUL,
-                temperature=0.1,
-                max_tokens=8192,
+                model=GeminiClient.FAST,
             )
             self._tracker.track(usage2)
             arch = ArchitectureSchema(**raw2)

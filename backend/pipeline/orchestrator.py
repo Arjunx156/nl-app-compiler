@@ -106,14 +106,18 @@ class PipelineOrchestrator:
                        f"{len(arch.pages)} pages | {len(arch.db_entities)} entities | "
                        f"{len(arch.api_groups)} API groups", tokens)
 
-            # ── Stage 3: Schema Generators (parallel) ─────────────────────
-            await emit("schemas", "running", "Generating UI, API, DB, Auth schemas in parallel...")
-            ui_schema, api_schema, db_schema, auth_schema = await asyncio.gather(
-                self._ui_gen.generate(arch),
-                self._api_gen.generate(arch),
-                self._db_gen.generate(arch),
-                self._auth_gen.generate(arch),
-            )
+            # ── Stage 3: Schema Generators (sequential to respect rate limits) ──
+            await emit("schemas", "running", "Generating UI schema...")
+            ui_schema = await self._ui_gen.generate(arch)
+
+            await emit("schemas", "running", "Generating API schema...")
+            api_schema = await self._api_gen.generate(arch)
+
+            await emit("schemas", "running", "Generating DB schema...")
+            db_schema = await self._db_gen.generate(arch)
+
+            await emit("schemas", "running", "Generating Auth schema...")
+            auth_schema = await self._auth_gen.generate(arch)
             tokens = self._tracker.get_total().total_tokens
             await emit("schemas", "done",
                        f"{len(ui_schema.pages)} pages | {len(api_schema.endpoints)} endpoints | "

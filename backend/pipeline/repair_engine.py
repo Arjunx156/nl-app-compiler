@@ -135,7 +135,7 @@ class RepairEngine:
                 raw, usage = await self._client.generate_json(
                     prompt=prompt,
                     stage_name=f"repair_api_iter{iteration}",
-                    model=GeminiClient.POWERFUL,
+                    model=GeminiClient.FAST,
                     temperature=0.1,
                 )
                 self._tracker.track(usage)
@@ -152,7 +152,7 @@ class RepairEngine:
                 raw, usage = await self._client.generate_json(
                     prompt=prompt,
                     stage_name=f"repair_db_iter{iteration}",
-                    model=GeminiClient.POWERFUL,
+                    model=GeminiClient.FAST,
                     temperature=0.1,
                 )
                 self._tracker.track(usage)
@@ -176,7 +176,7 @@ class RepairEngine:
                 raw, usage = await self._client.generate_json(
                     prompt=prompt,
                     stage_name=f"repair_auth_iter{iteration}",
-                    model=GeminiClient.POWERFUL,
+                    model=GeminiClient.FAST,
                     temperature=0.1,
                 )
                 self._tracker.track(usage)
@@ -193,7 +193,7 @@ class RepairEngine:
                 raw, usage = await self._client.generate_json(
                     prompt=prompt,
                     stage_name=f"repair_ui_iter{iteration}",
-                    model=GeminiClient.POWERFUL,
+                    model=GeminiClient.FAST,
                     temperature=0.1,
                 )
                 self._tracker.track(usage)

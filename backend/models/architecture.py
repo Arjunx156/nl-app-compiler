@@ -22,7 +22,7 @@ class APIGroupSpec(BaseModel):
     name: str = Field(..., description="API group name, e.g. contacts, auth")
     base_path: str = Field(..., description="Base path, e.g. /api/contacts")
     description: str = Field(default="")
-    entity_ref: str = Field(..., description="Primary entity this group operates on")
+    entity_ref: Optional[str] = Field(default=None, description="Primary entity this group operates on")
 
 
 class EntitySpec(BaseModel):

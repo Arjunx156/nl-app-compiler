@@ -31,9 +31,9 @@ class AuthSchemaGenerator:
         raw, usage = await self._client.generate_json(
             prompt=prompt,
             stage_name="auth_generator",
-            model=GeminiClient.POWERFUL,
+            model=GeminiClient.FAST,
             temperature=0.2,
-            max_tokens=4096,
+            max_tokens=8192,
         )
         self._tracker.track(usage)
 

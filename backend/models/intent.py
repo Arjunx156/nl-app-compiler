@@ -34,7 +34,7 @@ class RoleSpec(BaseModel):
 
 class MonetizationSpec(BaseModel):
     model: str = Field(..., description="subscription | one-time | freemium | usage-based")
-    tiers: List[str] = Field(default_factory=list, description="Tier names e.g. free, pro, enterprise")
+    tiers: Optional[List[str]] = Field(default_factory=list, description="Tier names e.g. free, pro, enterprise")
     payment_provider: Optional[str] = Field(default=None, description="stripe | paypal | etc.")
 
 

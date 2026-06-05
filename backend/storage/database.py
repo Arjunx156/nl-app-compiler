@@ -1,5 +1,6 @@
 """
-SQLAlchemy async database setup with SQLite.
+SQLAlchemy async database setup.
+Supports PostgreSQL (Supabase) in production and SQLite locally.
 """
 
 from __future__ import annotations
@@ -10,13 +11,40 @@ from pathlib import Path
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.orm import DeclarativeBase
 
-# Store DB in data/ directory
-DATA_DIR = Path(__file__).parent.parent / "data"
-DATA_DIR.mkdir(exist_ok=True)
+# ---------------------------------------------------------------------------
+# Determine database URL
+# ---------------------------------------------------------------------------
+# Priority: DATABASE_URL env var → SQLite fallback for local dev
+_env_url = os.getenv("DATABASE_URL", "")
 
-DB_URL = os.getenv("DATABASE_URL", f"sqlite+aiosqlite:///{DATA_DIR}/nl_compiler.db")
+if _env_url:
+    # Supabase / Railway provide postgresql:// — SQLAlchemy async needs
+    # the +asyncpg driver prefix
+    if _env_url.startswith("postgres://"):
+        _env_url = _env_url.replace("postgres://", "postgresql+asyncpg://", 1)
+    elif _env_url.startswith("postgresql://"):
+        _env_url = _env_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    DB_URL = _env_url
+else:
+    # Local development: use SQLite
+    DATA_DIR = Path(__file__).parent.parent / "data"
+    DATA_DIR.mkdir(exist_ok=True)
+    DB_URL = f"sqlite+aiosqlite:///{DATA_DIR}/nl_compiler.db"
 
-engine = create_async_engine(DB_URL, echo=False, future=True)
+# PostgreSQL needs different pool settings than SQLite
+_is_postgres = "postgresql" in DB_URL
+_engine_kwargs = {
+    "echo": False,
+    "future": True,
+}
+if _is_postgres:
+    _engine_kwargs.update({
+        "pool_size": 5,
+        "max_overflow": 10,
+        "pool_pre_ping": True,
+    })
+
+engine = create_async_engine(DB_URL, **_engine_kwargs)
 AsyncSessionLocal = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 
@@ -34,3 +62,4 @@ async def init_db() -> None:
 async def get_session() -> AsyncSession:
     async with AsyncSessionLocal() as session:
         yield session
+""", "Description": "Support both PostgreSQL (Supabase) and SQLite (local dev) with automatic URL transformation for the asyncpg driver."

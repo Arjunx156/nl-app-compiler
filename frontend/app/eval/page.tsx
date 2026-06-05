@@ -130,7 +130,7 @@ function TestTable({ title, description, tests, currentTest }: any) {
         </thead>
         <tbody className="divide-y divide-[#1f1f1f]">
           {tests.map((test: EvalResult) => (
-            <tr key={test.test_id} className={cn("transition-colors", currentTest === test.test_id ? "bg-[#7c3aed]/10" : "hover:bg-[#1a1a1a]")}>
+            <tr key={test.id} className={cn("transition-colors", currentTest === test.test_id ? "bg-[#7c3aed]/10" : "hover:bg-[#1a1a1a]")}>
               <td className="px-6 py-4">
                 <div className="flex flex-col gap-1">
                   <span className="text-[#f5f5f5] font-medium">{test.test_name}</span>

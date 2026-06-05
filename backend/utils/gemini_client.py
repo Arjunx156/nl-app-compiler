@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import random
 import time
 from typing import Any, Dict, Optional, Tuple
 
@@ -25,14 +26,20 @@ class GeminiClient:
     """
     Async wrapper around Google Gemini with:
     - Structured JSON output (response_mime_type=application/json)
-    - Retry on 429/503 with exponential backoff (max 3 retries)
+    - Retry on 429/503/truncation with exponential backoff (max 5 retries)
     - Per-call cost and latency logging
     """
 
+    # gemini-2.0-flash: 1500 RPD free tier (vs 20 for 2.5-flash)
+    # Excellent for structured JSON generation
     FAST = "gemini-2.0-flash"
-    POWERFUL = "gemini-1.5-pro"
+    DEFAULT_MODEL = FAST
 
-    MAX_RETRIES = 3
+    MAX_RETRIES = 5
+    # Base wait in seconds for exponential backoff: 5, 10, 20, 40, 80 …
+    BACKOFF_BASE = 5
+    # Small fixed delay between every call to spread load
+    INTER_CALL_DELAY = 1.5
     RETRY_STATUSES = {429, 503}
 
     def __init__(self, api_key: str, tracker: Optional[CostTracker] = None) -> None:
@@ -44,10 +51,10 @@ class GeminiClient:
         self,
         prompt: str,
         stage_name: str,
-        model: str = FAST,
+        model: str = DEFAULT_MODEL,
         response_schema: Optional[Dict[str, Any]] = None,
         temperature: float = 0.2,
-        max_tokens: int = 8192,
+        max_tokens: int = 65536,
     ) -> Tuple[Dict[str, Any], UsageStats]:
         """
         Generate a JSON response from Gemini.
@@ -82,6 +89,30 @@ class GeminiClient:
                 )
                 latency_ms = int((time.perf_counter() - start) * 1000)
 
+                # ── Check finish reason before touching response.text ──────
+                finish_reason = None
+                try:
+                    candidate = response.candidates[0]
+                    finish_reason = str(candidate.finish_reason)
+                except (IndexError, AttributeError):
+                    pass
+
+                # MAX_TOKENS or SAFETY mean the output is incomplete — retry
+                if finish_reason and any(
+                    bad in finish_reason.upper()
+                    for bad in ("MAX_TOKENS", "SAFETY", "RECITATION", "OTHER")
+                ):
+                    raise ValueError(
+                        f"Gemini finish_reason={finish_reason} (incomplete output)"
+                    )
+
+                # ── Safe text extraction ───────────────────────────────────
+                try:
+                    raw_text = response.text.strip()
+                except ValueError as ve:
+                    # response.text raises ValueError when the response is blocked
+                    raise ValueError(f"Blocked response: {ve}") from ve
+
                 # Parse usage
                 usage_meta = response.usage_metadata
                 prompt_tokens = getattr(usage_meta, "prompt_token_count", 0) or 0
@@ -110,16 +141,24 @@ class GeminiClient:
                     cost_usd=cost,
                     latency_ms=latency_ms,
                     attempt=attempt,
+                    finish_reason=finish_reason,
                 )
 
-                # Parse JSON
-                raw_text = response.text.strip()
-                # Strip markdown code fences if present
+                # ── Strip markdown fences if present ──────────────────────
                 if raw_text.startswith("```"):
                     lines = raw_text.split("\n")
                     raw_text = "\n".join(lines[1:-1]) if lines[-1] == "```" else "\n".join(lines[1:])
 
-                parsed = json.loads(raw_text)
+                # ── Parse JSON — treat parse errors as retryable ──────────
+                try:
+                    parsed = json.loads(raw_text)
+                except json.JSONDecodeError as jde:
+                    raise ValueError(
+                        f"Truncated/invalid JSON at char {jde.pos}: {jde.msg}"
+                    ) from jde
+
+                # Brief pause after every successful call to stay under QPM limits
+                await asyncio.sleep(self.INTER_CALL_DELAY)
                 return parsed, stats
 
             except Exception as exc:
@@ -133,15 +172,21 @@ class GeminiClient:
                     or "quota" in exc_str.lower()
                     or "rate" in exc_str.lower()
                     or "unavailable" in exc_str.lower()
+                    or "truncated" in exc_str.lower()
+                    or "incomplete" in exc_str.lower()
+                    or "invalid json" in exc_str.lower()
+                    or "blocked" in exc_str.lower()
+                    or "finish_reason" in exc_str.lower()
                 )
 
                 if is_retryable and attempt < self.MAX_RETRIES:
-                    wait = 2 ** attempt
+                    # Exponential backoff with jitter to avoid thundering-herd
+                    wait = self.BACKOFF_BASE * (2 ** attempt) + random.uniform(0, 2)
                     self._log.warning(
                         "gemini_retry",
                         stage=stage_name,
                         attempt=attempt,
-                        wait_s=wait,
+                        wait_s=round(wait, 1),
                         error=exc_str,
                     )
                     await asyncio.sleep(wait)

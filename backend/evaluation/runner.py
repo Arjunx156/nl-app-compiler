@@ -98,6 +98,18 @@ class EvaluationRunner:
                     "status": result["status"],
                     "score": result["score"],
                 })
+            
+            # Avoid Gemini free-tier rate limits (15 RPM)
+            # Each test makes ~4 API calls, so 30s delay keeps us safely under the limit
+            if tc != EVAL_TEST_CASES[-1]:
+                if progress_cb:
+                    await progress_cb({
+                        "type": "progress",
+                        "test_id": tc.id,
+                        "test_name": tc.name,
+                        "status": "waiting (rate limit delay)",
+                    })
+                await asyncio.sleep(30)
 
         # Aggregate metrics
         total = len(results)

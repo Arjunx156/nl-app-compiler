@@ -42,7 +42,7 @@ class IntentExtractor:
             stage_name="intent_extraction",
             model=GeminiClient.FAST,
             temperature=0.2,
-            max_tokens=4096,
+            max_tokens=8192,
         )
         self._tracker.track(usage)
         self._log.info("intent_extracted", tokens=usage.total_tokens, cost=usage.cost_usd)
@@ -54,17 +54,12 @@ class IntentExtractor:
         # Parse into IntentSchema
         intent = IntentSchema(**raw)
 
-        # Apply clarification rules
-        if len(intent.ambiguities) > 5 or intent.complexity_score < 3:
-            reason = (
-                f"Prompt has {len(intent.ambiguities)} ambiguities"
-                if len(intent.ambiguities) > 5
-                else f"Complexity score too low ({intent.complexity_score}/10)"
-            )
+        # Apply clarification rules — only block on truly vague prompts
+        if intent.complexity_score < 2:
             return ClarificationRequest(
                 needs_clarification=True,
-                reason=reason,
-                questions=[
+                reason=f"Complexity score too low ({intent.complexity_score}/10) — prompt needs more detail",
+                questions=intent.ambiguities[:6] if intent.ambiguities else [
                     "What are the main user roles?",
                     "What are the core features you need?",
                     "Do you need authentication?",

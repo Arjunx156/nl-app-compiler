@@ -37,10 +37,11 @@ Return ONLY valid JSON matching this exact schema:
 }
 
 RULES:
-- If the prompt is too vague (fewer than 3 concrete features), return needs_clarification=true instead
+- ONLY return needs_clarification=true if the prompt is extremely vague (fewer than 3 concrete features AND no clear app type)
 - For needs_clarification, return: {"needs_clarification": true, "reason": "...", "questions": ["..."], "partial_intent": null}
 - Always include at least one "admin" or superuser role
 - complexity_score: 1-3 = simple, 4-6 = medium, 7-10 = complex
-- If the prompt has more than 5 ambiguities, set needs_clarification=true
-- Make reasonable assumptions for anything not stated (e.g., always assume email/password auth)
+- Ambiguities are informational notes for the architect, NOT reasons to block generation
+- Make reasonable assumptions for anything not stated (e.g., always assume email/password auth) and list them in "assumptions"
+- A detailed prompt with many features should NEVER trigger needs_clarification, even if minor details are unspecified
 - Do NOT include markdown, only raw JSON

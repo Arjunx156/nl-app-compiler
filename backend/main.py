@@ -6,7 +6,14 @@ Exposes health check and all pipeline/generation/eval routes.
 from __future__ import annotations
 
 import os
-import uuid
+import sys
+import tempfile
+
+# Fix protobuf compatibility with Python 3.14 by forcing ImportError
+if sys.version_info >= (3, 14):
+    sys.modules['google._upb._message'] = None
+    os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
+
 import json
 import asyncio
 from contextlib import asynccontextmanager
@@ -15,7 +22,7 @@ from typing import AsyncGenerator
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import FileResponse, Response
 from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
 import structlog
@@ -54,9 +61,21 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# CORS: allow localhost for dev + any Vercel deployment
+_allowed_origins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+# Add deployed frontend URL from env (set in Railway)
+_frontend_url = os.getenv("FRONTEND_URL", "")
+if _frontend_url:
+    _allowed_origins.append(_frontend_url)
+    # Also allow without trailing slash
+    _allowed_origins.append(_frontend_url.rstrip("/"))
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=_allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -119,7 +138,7 @@ async def generate(req: GenerateRequest, request: Request):
             item = await event_queue.get()
             if item is None:
                 break
-            yield {"event": item.get("type", "progress"), "data": json.dumps(item)}
+            yield {"event": item.get("type", "progress"), "data": json.dumps(item, default=str)}
 
     return EventSourceResponse(event_generator())
 
@@ -145,15 +164,18 @@ async def get_generation(gen_id: str):
 
 @app.get("/api/generations/{gen_id}/download")
 async def download_generation(gen_id: str):
+    """Serve JSON as a downloadable file (platform-safe, no /tmp dependency)."""
     from storage.repository import get_generation as repo_get
     record = await repo_get(gen_id)
     if not record:
         raise HTTPException(status_code=404, detail="Generation not found")
-    tmp_path = f"/tmp/{gen_id}.json"
-    with open(tmp_path, "w") as f:
-        f.write(record.full_result_json)
-    return FileResponse(tmp_path, media_type="application/json",
-                        filename=f"compilation_{gen_id}.json")
+    return Response(
+        content=record.full_result_json,
+        media_type="application/json",
+        headers={
+            "Content-Disposition": f'attachment; filename="compilation_{gen_id}.json"'
+        },
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -193,7 +215,7 @@ async def eval_run_all(request: Request):
             item = await event_queue.get()
             if item is None:
                 break
-            yield {"event": item.get("type", "progress"), "data": json.dumps(item)}
+            yield {"event": item.get("type", "progress"), "data": json.dumps(item, default=str)}
 
     return EventSourceResponse(gen())
 

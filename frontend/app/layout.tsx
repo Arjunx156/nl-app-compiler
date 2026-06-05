@@ -17,8 +17,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
-      <body className={`${inter.className} min-h-screen bg-[#0a0a0a] text-[#f5f5f5] antialiased selection:bg-[#7c3aed]/30`}>
+    <html lang="en" className="dark" suppressHydrationWarning>
+      <body suppressHydrationWarning className={`${inter.className} min-h-screen bg-[#0a0a0a] text-[#f5f5f5] antialiased selection:bg-[#7c3aed]/30`}>
         {/* Global Navigation */}
         <nav className="fixed top-0 left-0 right-0 h-16 bg-[#0a0a0a]/80 backdrop-blur-md border-b border-[#1f1f1f] z-50 flex items-center justify-between px-6">
           <Link href="/" className="flex items-center gap-2 group">
