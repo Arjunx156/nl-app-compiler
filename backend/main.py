@@ -7,12 +7,9 @@ from __future__ import annotations
 
 import os
 import sys
-import tempfile
 
-# Fix protobuf compatibility with Python 3.14 by forcing ImportError
-if sys.version_info >= (3, 14):
-    sys.modules['google._upb._message'] = None
-    os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
+# Force pure-Python protobuf implementation (avoids C extension crashes on Linux)
+os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
 
 import json
 import asyncio
