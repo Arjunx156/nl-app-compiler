@@ -8,8 +8,13 @@ from __future__ import annotations
 import os
 import sys
 
-# Force pure-Python protobuf implementation (avoids C extension crashes on Linux)
+# Force pure-Python protobuf (required on Python 3.14 where C extension crashes)
 os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
+try:
+    sys.modules['google._upb._message'] = None  # type: ignore
+except Exception:
+    pass
+
 
 import json
 import asyncio

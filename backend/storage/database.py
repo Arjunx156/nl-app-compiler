@@ -14,15 +14,13 @@ from sqlalchemy.orm import DeclarativeBase
 # ---------------------------------------------------------------------------
 # Determine database URL
 # ---------------------------------------------------------------------------
-# Priority: DATABASE_URL env var → SQLite fallback for local dev
 _env_url = os.getenv("DATABASE_URL", "")
 
 if _env_url:
-    # Supabase / Railway provide postgresql:// — SQLAlchemy async needs
-    # the +asyncpg driver prefix
+    # Supabase / Railway provide postgresql:// — SQLAlchemy async needs +asyncpg
     if _env_url.startswith("postgres://"):
         _env_url = _env_url.replace("postgres://", "postgresql+asyncpg://", 1)
-    elif _env_url.startswith("postgresql://"):
+    elif _env_url.startswith("postgresql://") and "+asyncpg" not in _env_url:
         _env_url = _env_url.replace("postgresql://", "postgresql+asyncpg://", 1)
     DB_URL = _env_url
 else:
@@ -62,4 +60,3 @@ async def init_db() -> None:
 async def get_session() -> AsyncSession:
     async with AsyncSessionLocal() as session:
         yield session
-""", "Description": "Support both PostgreSQL (Supabase) and SQLite (local dev) with automatic URL transformation for the asyncpg driver."
