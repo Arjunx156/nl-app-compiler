@@ -47,8 +47,12 @@ from storage.database import init_db  # noqa: E402
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator:
-    await init_db()
-    logger.info("Database initialised")
+    try:
+        await init_db()
+        logger.info("Database initialised")
+    except Exception as exc:
+        logger.error("Database init failed — check DATABASE_URL", error=str(exc))
+        # App still starts; DB-dependent routes will fail gracefully
     yield
     logger.info("Shutting down")
 
