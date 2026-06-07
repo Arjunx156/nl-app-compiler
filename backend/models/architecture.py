@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class PageSpec(BaseModel):
@@ -30,6 +30,13 @@ class EntitySpec(BaseModel):
     description: str = Field(default="")
     relationships: List[str] = Field(default_factory=list, description="Related entities")
     is_core: bool = Field(default=True)
+
+    @field_validator("relationships", mode="before")
+    @classmethod
+    def coerce_none_to_list(cls, v):
+        if v is None:
+            return []
+        return v
 
 
 class AuthStrategySpec(BaseModel):
