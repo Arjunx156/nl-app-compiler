@@ -154,6 +154,19 @@ class GroqClient:
                 last_exc = exc
                 exc_str = str(exc)
 
+                # If we hit a daily token limit, do not retry because it won't resolve for hours.
+                is_daily_limit = "tokens per day" in exc_str.lower() or "tpd" in exc_str.lower()
+
+                if is_daily_limit:
+                    if model == self.FAST:
+                        # Attempt to fallback to 8B model once
+                        self._log.warning("groq_daily_limit_fallback", original_model=model, fallback="llama-3.1-8b-instant")
+                        model = "llama-3.1-8b-instant"
+                        continue
+                    else:
+                        self._log.error("groq_daily_limit_exhausted", stage=stage_name, error=exc_str)
+                        raise GroqClientError(f"Groq daily token limit exhausted: {exc_str}") from exc
+
                 is_retryable = (
                     "429" in exc_str
                     or "503" in exc_str
