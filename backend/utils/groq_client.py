@@ -159,13 +159,18 @@ class GroqClient:
 
                 if is_daily_limit:
                     if model == self.FAST:
-                        # Attempt to fallback to 8B model once
-                        self._log.warning("groq_daily_limit_fallback", original_model=model, fallback="llama-3.1-8b-instant")
+                        # Fallback 1: The older 70B model (separate 100k quota)
+                        self._log.warning("groq_daily_limit_fallback_1", original=model, fallback="llama3-70b-8192")
+                        model = "llama3-70b-8192"
+                        continue
+                    elif model == "llama3-70b-8192":
+                        # Fallback 2: The 8B model (separate 100k quota)
+                        self._log.warning("groq_daily_limit_fallback_2", original=model, fallback="llama-3.1-8b-instant")
                         model = "llama-3.1-8b-instant"
                         continue
                     else:
                         self._log.error("groq_daily_limit_exhausted", stage=stage_name, error=exc_str)
-                        raise GroqClientError(f"Groq daily token limit exhausted: {exc_str}") from exc
+                        raise GroqClientError(f"Groq daily token limit exhausted across all models: {exc_str}") from exc
 
                 is_retryable = (
                     "429" in exc_str
