@@ -16,7 +16,7 @@ import structlog
 from models.validation import ValidationError, ValidationReport
 from models.output import AllSchemas
 from models.architecture import ArchitectureSchema
-from utils.gemini_client import GeminiClient
+from utils.groq_client import GroqClient
 from utils.cost_tracker import CostTracker
 from utils.prompt_loader import load_prompt
 
@@ -38,7 +38,7 @@ def _closest_match(word: str, possibilities: List[str]) -> str | None:
 class RuleBasedRepairEngine:
     MAX_ITERATIONS = 3
 
-    def __init__(self, client: GeminiClient, tracker: CostTracker) -> None:
+    def __init__(self, client: GroqClient, tracker: CostTracker) -> None:
         self._client = client
         self._tracker = tracker
         self._log = logger.bind(stage="repair_engine")
@@ -272,7 +272,7 @@ class RuleBasedRepairEngine:
                 raw, usage = await self._client.generate_json(
                     prompt=prompt,
                     stage_name=f"repair_api_iter{iteration}",
-                    model=GeminiClient.FAST,
+                    model=GroqClient.FAST,
                     temperature=0.1,
                 )
                 self._tracker.track(usage)
@@ -289,7 +289,7 @@ class RuleBasedRepairEngine:
                 raw, usage = await self._client.generate_json(
                     prompt=prompt,
                     stage_name=f"repair_db_iter{iteration}",
-                    model=GeminiClient.FAST,
+                    model=GroqClient.FAST,
                     temperature=0.1,
                 )
                 self._tracker.track(usage)
@@ -313,7 +313,7 @@ class RuleBasedRepairEngine:
                 raw, usage = await self._client.generate_json(
                     prompt=prompt,
                     stage_name=f"repair_auth_iter{iteration}",
-                    model=GeminiClient.FAST,
+                    model=GroqClient.FAST,
                     temperature=0.1,
                 )
                 self._tracker.track(usage)
@@ -330,7 +330,7 @@ class RuleBasedRepairEngine:
                 raw, usage = await self._client.generate_json(
                     prompt=prompt,
                     stage_name=f"repair_ui_iter{iteration}",
-                    model=GeminiClient.FAST,
+                    model=GroqClient.FAST,
                     temperature=0.1,
                 )
                 self._tracker.track(usage)

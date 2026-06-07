@@ -12,7 +12,7 @@ from typing import Union
 import structlog
 
 from models.intent import IntentSchema, ClarificationRequest
-from utils.gemini_client import GeminiClient
+from utils.groq_client import GroqClient
 from utils.cost_tracker import CostTracker
 from utils.prompt_loader import load_prompt
 
@@ -22,7 +22,7 @@ logger = structlog.get_logger(__name__)
 class IntentExtractor:
     """Extracts structured IntentSchema from a raw user prompt."""
 
-    def __init__(self, client: GeminiClient, tracker: CostTracker) -> None:
+    def __init__(self, client: GroqClient, tracker: CostTracker) -> None:
         self._client = client
         self._tracker = tracker
         self._log = logger.bind(stage="intent_extractor")
@@ -40,7 +40,7 @@ class IntentExtractor:
         raw, usage = await self._client.generate_json(
             prompt=prompt,
             stage_name="intent_extraction",
-            model=GeminiClient.FAST,
+            model=GroqClient.FAST,
             temperature=0.2,
             max_tokens=8192,
         )
@@ -83,7 +83,7 @@ if __name__ == "__main__":
     setup_logging()
 
     api_key = os.getenv("GEMINI_API_KEY", "")
-    client = GeminiClient(api_key=api_key)
+    client = GroqClient(api_key=api_key)
     tracker = CostTracker()
     extractor = IntentExtractor(client=client, tracker=tracker)
 

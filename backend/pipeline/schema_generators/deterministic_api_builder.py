@@ -220,7 +220,7 @@ class DeterministicAPIBuilder:
                 response=ResponseBody(status_code=200, fields=resp_fields, is_list=True),
                 auth_required=True,
                 roles_allowed=all_r,
-                db_entity_ref=entity.name,
+                db_entity_ref=plural,  # matches DB table name exactly
                 tags=[plural],
             ))
 
@@ -235,7 +235,7 @@ class DeterministicAPIBuilder:
                 response=ResponseBody(status_code=200, fields=resp_fields, is_list=False),
                 auth_required=True,
                 roles_allowed=all_r,
-                db_entity_ref=entity.name,
+                db_entity_ref=plural,
                 tags=[plural],
             ))
 
@@ -250,7 +250,7 @@ class DeterministicAPIBuilder:
                 response=ResponseBody(status_code=201, fields=resp_fields, is_list=False),
                 auth_required=True,
                 roles_allowed=write_roles,
-                db_entity_ref=entity.name,
+                db_entity_ref=plural,
                 tags=[plural],
             ))
 
@@ -265,7 +265,7 @@ class DeterministicAPIBuilder:
                 response=ResponseBody(status_code=200, fields=resp_fields, is_list=False),
                 auth_required=True,
                 roles_allowed=write_roles,
-                db_entity_ref=entity.name,
+                db_entity_ref=plural,
                 tags=[plural],
             ))
 
@@ -280,7 +280,7 @@ class DeterministicAPIBuilder:
                 response=ResponseBody(status_code=204, fields=[], is_list=False),
                 auth_required=True,
                 roles_allowed=admin_r,
-                db_entity_ref=entity.name,
+                db_entity_ref=plural,
                 tags=[plural],
             ))
 
@@ -307,7 +307,7 @@ class DeterministicAPIBuilder:
                 ]),
                 auth_required=False,
                 roles_allowed=[],
-                db_entity_ref="User",
+                db_entity_ref="users",  # matches plural snake_case table name
                 tags=["auth"],
             ),
             EndpointSpec(
@@ -328,7 +328,7 @@ class DeterministicAPIBuilder:
                 ]),
                 auth_required=False,
                 roles_allowed=[],
-                db_entity_ref="User",
+                db_entity_ref="users",  # matches plural snake_case table name
                 tags=["auth"],
             ),
             EndpointSpec(
@@ -343,7 +343,7 @@ class DeterministicAPIBuilder:
                 ]),
                 auth_required=True,
                 roles_allowed=[],
-                db_entity_ref="User",
+                db_entity_ref="users",  # matches plural snake_case table name
                 tags=["auth"],
             ),
             EndpointSpec(
@@ -360,7 +360,7 @@ class DeterministicAPIBuilder:
                 ]),
                 auth_required=True,
                 roles_allowed=[],
-                db_entity_ref="User",
+                db_entity_ref="users",  # matches plural snake_case table name
                 tags=["auth"],
             ),
         ]

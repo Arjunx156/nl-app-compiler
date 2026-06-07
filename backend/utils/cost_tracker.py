@@ -39,12 +39,13 @@ class StageStats:
 class CostTracker:
     """Accumulates LLM usage statistics per generation."""
 
-    # Gemini pricing per 1K tokens (approximate)
+    # Gemini & Groq pricing per 1K tokens
     PRICING: Dict[str, Dict[str, float]] = {
         "gemini-2.0-flash": {"input": 0.000075, "output": 0.0003},
         "gemini-2.5-flash": {"input": 0.000075, "output": 0.0003},
         "gemini-1.5-pro": {"input": 0.00125, "output": 0.005},
-        "gemini-1.5-flash": {"input": 0.000075, "output": 0.0003},
+        "llama-3.3-70b-versatile": {"input": 0.00059, "output": 0.00079},
+        "llama-3.1-8b-instant": {"input": 0.00005, "output": 0.00008},
     }
 
     def __init__(self) -> None:

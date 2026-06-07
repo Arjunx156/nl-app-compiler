@@ -10,7 +10,7 @@ os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
 from dotenv import load_dotenv
 
 from evaluation.runner import EvaluationRunner
-from utils.gemini_client import GeminiClient
+from utils.groq_client import GroqClient
 from utils.cost_tracker import CostTracker
 from storage.database import init_db
 from utils.logger import setup_logging
@@ -20,8 +20,8 @@ async def main():
     setup_logging()
     await init_db()
     
-    api_key = os.getenv("GEMINI_API_KEY", "")
-    client = GeminiClient(api_key=api_key)
+    api_key = os.getenv("GROQ_API_KEY", "")
+    client = GroqClient(api_key=api_key)
     tracker = CostTracker()
     runner = EvaluationRunner(client=client, tracker=tracker)
     

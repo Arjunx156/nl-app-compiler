@@ -30,7 +30,7 @@ from pipeline.schema_generators import (
 )
 from pipeline.validator import CrossLayerValidator
 from pipeline.repair_engine import RuleBasedRepairEngine
-from utils.gemini_client import GeminiClient
+from utils.groq_client import GroqClient
 from utils.cost_tracker import CostTracker
 from utils.streaming import make_pipeline_event, make_log_event
 from utils.cache import get_cache
@@ -43,7 +43,7 @@ ProgressCallback = Callable[[dict], Awaitable[None]]
 class PipelineOrchestrator:
     """Wires all 5 stages, streams progress via callback, returns CompilationResult."""
 
-    def __init__(self, client: GeminiClient, tracker: CostTracker) -> None:
+    def __init__(self, client: GroqClient, tracker: CostTracker) -> None:
         self._client = client
         self._tracker = tracker
         self._log = logger.bind(component="orchestrator")

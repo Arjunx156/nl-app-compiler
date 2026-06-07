@@ -111,11 +111,11 @@ async def generate(req: GenerateRequest, request: Request):
     """
     from pipeline.orchestrator import PipelineOrchestrator
     from storage.repository import save_generation
-    from utils.gemini_client import GeminiClient
+    from utils.groq_client import GroqClient
     from utils.cost_tracker import CostTracker
 
-    api_key = os.getenv("GEMINI_API_KEY", "")
-    client = GeminiClient(api_key=api_key)
+    api_key = os.getenv("GROQ_API_KEY", "")
+    client = GroqClient(api_key=api_key)
     tracker = CostTracker()
     orchestrator = PipelineOrchestrator(client=client, tracker=tracker)
 
@@ -190,11 +190,11 @@ async def download_generation(gen_id: str):
 @app.post("/api/eval/run-all")
 async def eval_run_all(request: Request):
     from evaluation.runner import EvaluationRunner
-    from utils.gemini_client import GeminiClient
+    from utils.groq_client import GroqClient
     from utils.cost_tracker import CostTracker
 
-    api_key = os.getenv("GEMINI_API_KEY", "")
-    client = GeminiClient(api_key=api_key)
+    api_key = os.getenv("GROQ_API_KEY", "")
+    client = GroqClient(api_key=api_key)
     tracker = CostTracker()
     runner = EvaluationRunner(client=client, tracker=tracker)
 
@@ -229,11 +229,11 @@ async def eval_run_all(request: Request):
 @app.post("/api/eval/run/{test_id}")
 async def eval_run_single(test_id: str):
     from evaluation.runner import EvaluationRunner
-    from utils.gemini_client import GeminiClient
+    from utils.groq_client import GroqClient
     from utils.cost_tracker import CostTracker
 
-    api_key = os.getenv("GEMINI_API_KEY", "")
-    client = GeminiClient(api_key=api_key)
+    api_key = os.getenv("GROQ_API_KEY", "")
+    client = GroqClient(api_key=api_key)
     tracker = CostTracker()
     runner = EvaluationRunner(client=client, tracker=tracker)
     result = await runner.run_single(test_id)

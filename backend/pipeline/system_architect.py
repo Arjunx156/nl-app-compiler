@@ -12,7 +12,7 @@ import structlog
 
 from models.intent import IntentSchema
 from models.architecture import ArchitectureSchema
-from utils.gemini_client import GeminiClient
+from utils.groq_client import GroqClient
 from utils.cost_tracker import CostTracker
 from utils.prompt_loader import load_prompt
 
@@ -22,7 +22,7 @@ logger = structlog.get_logger(__name__)
 class SystemArchitect:
     """Designs ArchitectureSchema from IntentSchema."""
 
-    def __init__(self, client: GeminiClient, tracker: CostTracker) -> None:
+    def __init__(self, client: GroqClient, tracker: CostTracker) -> None:
         self._client = client
         self._tracker = tracker
         self._log = logger.bind(stage="system_architect")
@@ -39,7 +39,7 @@ class SystemArchitect:
         raw, usage = await self._client.generate_json(
             prompt=prompt,
             stage_name="system_architect",
-            model=GeminiClient.FAST,
+            model=GroqClient.FAST,
         )
         self._tracker.track(usage)
         self._log.info("architecture_generated", tokens=usage.total_tokens)
@@ -79,7 +79,7 @@ class SystemArchitect:
             raw2, usage2 = await self._client.generate_json(
                 prompt=retry_prompt,
                 stage_name="system_architect_retry",
-                model=GeminiClient.FAST,
+                model=GroqClient.FAST,
             )
             self._tracker.track(usage2)
             arch = ArchitectureSchema(**raw2)
@@ -107,7 +107,7 @@ if __name__ == "__main__":
     from models.intent import IntentSchema, AppType, FeatureSpec, RoleSpec
 
     api_key = os.getenv("GEMINI_API_KEY", "")
-    client = GeminiClient(api_key=api_key)
+    client = GroqClient(api_key=api_key)
     tracker = CostTracker()
     architect = SystemArchitect(client=client, tracker=tracker)
 

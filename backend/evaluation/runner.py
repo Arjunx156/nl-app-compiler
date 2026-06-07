@@ -17,7 +17,7 @@ from pipeline.orchestrator import PipelineOrchestrator
 from models.output import CompilationResult
 from models.intent import ClarificationRequest
 from storage.repository import save_eval_result
-from utils.gemini_client import GeminiClient
+from utils.groq_client import GroqClient
 from utils.cost_tracker import CostTracker
 
 logger = structlog.get_logger(__name__)
@@ -68,7 +68,7 @@ def _score_result(tc: EvalTestCase, result: CompilationResult) -> int:
 
 
 class EvaluationRunner:
-    def __init__(self, client: GeminiClient, tracker: CostTracker) -> None:
+    def __init__(self, client: GroqClient, tracker: CostTracker) -> None:
         self._client = client
         self._tracker = tracker
         self._log = logger.bind(component="eval_runner")
@@ -80,7 +80,7 @@ class EvaluationRunner:
         
         # We no longer need the hardcoded 30s sleep because:
         # 1) Pipeline now uses 2 LLM calls instead of 6-21.
-        # 2) GeminiClient now has an AdaptiveRateLimiter.
+        # 2) GroqClient now has an AdaptiveRateLimiter.
         # We can run these sequentially without sleeping, or in small parallel batches.
         # Running sequentially to keep logs clean.
         
