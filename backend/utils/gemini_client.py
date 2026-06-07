@@ -157,7 +157,7 @@ class GeminiClient:
                 exc_str = str(exc)
 
                 is_retryable = (
-                    "429" in exc_str
+                    ("429" in exc_str and "GenerateRequestsPerDay" not in exc_str)
                     or "503" in exc_str
                     or "quota" in exc_str.lower()
                     or "rate" in exc_str.lower()
@@ -168,6 +168,11 @@ class GeminiClient:
                     or "blocked" in exc_str.lower()
                     or "finish_reason" in exc_str.lower()
                 )
+
+                # Fail fast if we hit the daily quota limit
+                if "GenerateRequestsPerDay" in exc_str:
+                    self._log.error("gemini_daily_quota_exhausted", error=exc_str)
+                    raise GeminiClientError(f"Gemini Daily Quota Exhausted: {exc_str}") from exc
 
                 if is_retryable and attempt < self.MAX_RETRIES:
                     wait = self.BACKOFF_BASE * (2 ** attempt) + random.uniform(0, 2)
