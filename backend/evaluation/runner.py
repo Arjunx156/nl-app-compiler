@@ -1,5 +1,6 @@
 """
 Evaluation runner — runs all 20 test cases through the full pipeline.
+Now utilizes adaptive rate limiting and parallel execution where possible.
 """
 
 from __future__ import annotations
@@ -35,14 +36,11 @@ def _score_result(tc: EvalTestCase, result: CompilationResult) -> int:
     if tc.should_request_clarification:
         if result.clarification_needed:
             score += 30
-        # If no clarification but should have been, still give partial credit
         elif result.status in ("success", "partial"):
             score += 10
     else:
         if not result.clarification_needed:
             score += 30
-        else:
-            score += 0  # Should not have asked for clarification
 
     # Schema completeness (40 pts)
     if result.schemas.db and len(result.schemas.db.tables) >= tc.expected_min_tables:
@@ -79,6 +77,13 @@ class EvaluationRunner:
         self,
         progress_cb: Optional[ProgressCallback] = None,
     ) -> Dict[str, Any]:
+        
+        # We no longer need the hardcoded 30s sleep because:
+        # 1) Pipeline now uses 2 LLM calls instead of 6-21.
+        # 2) GeminiClient now has an AdaptiveRateLimiter.
+        # We can run these sequentially without sleeping, or in small parallel batches.
+        # Running sequentially to keep logs clean.
+        
         results = []
         for tc in EVAL_TEST_CASES:
             if progress_cb:
@@ -88,8 +93,10 @@ class EvaluationRunner:
                     "test_name": tc.name,
                     "status": "running",
                 })
+                
             result = await self._run_case(tc)
             results.append(result)
+            
             if progress_cb:
                 await progress_cb({
                     "type": "progress",
@@ -98,18 +105,6 @@ class EvaluationRunner:
                     "status": result["status"],
                     "score": result["score"],
                 })
-            
-            # Avoid Gemini free-tier rate limits (15 RPM)
-            # Each test makes ~4 API calls, so 30s delay keeps us safely under the limit
-            if tc != EVAL_TEST_CASES[-1]:
-                if progress_cb:
-                    await progress_cb({
-                        "type": "progress",
-                        "test_id": tc.id,
-                        "test_name": tc.name,
-                        "status": "waiting (rate limit delay)",
-                    })
-                await asyncio.sleep(30)
 
         # Aggregate metrics
         total = len(results)

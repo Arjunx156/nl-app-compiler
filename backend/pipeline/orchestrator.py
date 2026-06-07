@@ -1,5 +1,6 @@
 """
 Pipeline Orchestrator — wires all 5 stages together with SSE progress callbacks.
+Now utilizing deterministic schema builders to eliminate 4+ LLM calls.
 """
 
 from __future__ import annotations
@@ -19,12 +20,16 @@ from models.intent import ClarificationRequest
 from models.validation import ValidationReport
 from pipeline.intent_extractor import IntentExtractor
 from pipeline.system_architect import SystemArchitect
+
+# Import deterministic builders
 from pipeline.schema_generators import (
-    UISchemaGenerator, APISchemaGenerator,
-    DBSchemaGenerator, AuthSchemaGenerator,
+    DeterministicUIBuilder,
+    DeterministicAPIBuilder,
+    DeterministicDBBuilder,
+    DeterministicAuthBuilder,
 )
 from pipeline.validator import CrossLayerValidator
-from pipeline.repair_engine import RepairEngine
+from pipeline.repair_engine import RuleBasedRepairEngine
 from utils.gemini_client import GeminiClient
 from utils.cost_tracker import CostTracker
 from utils.streaming import make_pipeline_event, make_log_event
@@ -45,12 +50,15 @@ class PipelineOrchestrator:
 
         self._intent_extractor = IntentExtractor(client, tracker)
         self._system_architect = SystemArchitect(client, tracker)
-        self._ui_gen = UISchemaGenerator(client, tracker)
-        self._api_gen = APISchemaGenerator(client, tracker)
-        self._db_gen = DBSchemaGenerator(client, tracker)
-        self._auth_gen = AuthSchemaGenerator(client, tracker)
+        
+        # Instantiate deterministic builders (pure Python)
+        self._ui_gen = DeterministicUIBuilder()
+        self._api_gen = DeterministicAPIBuilder()
+        self._db_gen = DeterministicDBBuilder()
+        self._auth_gen = DeterministicAuthBuilder()
+        
         self._validator = CrossLayerValidator()
-        self._repair = RepairEngine(client, tracker)
+        self._repair = RuleBasedRepairEngine(client, tracker)
 
     async def compile(
         self,
@@ -106,18 +114,16 @@ class PipelineOrchestrator:
                        f"{len(arch.pages)} pages | {len(arch.db_entities)} entities | "
                        f"{len(arch.api_groups)} API groups", tokens)
 
-            # ── Stage 3: Schema Generators (sequential to respect rate limits) ──
-            await emit("schemas", "running", "Generating UI schema...")
-            ui_schema = await self._ui_gen.generate(arch)
-
-            await emit("schemas", "running", "Generating API schema...")
-            api_schema = await self._api_gen.generate(arch)
-
-            await emit("schemas", "running", "Generating DB schema...")
-            db_schema = await self._db_gen.generate(arch)
-
-            await emit("schemas", "running", "Generating Auth schema...")
-            auth_schema = await self._auth_gen.generate(arch)
+            # ── Stage 3: Schema Generators (Deterministic + Parallel) ─────
+            await emit("schemas", "running", "Generating schemas deterministically...")
+            
+            # These are pure Python synchronous functions now, so they run virtually instantly
+            # We don't need asyncio.gather anymore
+            ui_schema = self._ui_gen.build(arch)
+            api_schema = self._api_gen.build(arch, intent)
+            db_schema = self._db_gen.build(arch)
+            auth_schema = self._auth_gen.build(arch, intent)
+            
             tokens = self._tracker.get_total().total_tokens
             await emit("schemas", "done",
                        f"{len(ui_schema.pages)} pages | {len(api_schema.endpoints)} endpoints | "
